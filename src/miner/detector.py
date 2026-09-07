@@ -9,10 +9,10 @@ from pathlib import PurePosixPath
 LOCK_SUFFIX = ".lock.yml"
 
 
-def _file_name(path: str) -> str:
-    """Obtiene el nombre de archivo y tolera rutas POSIX o Windows."""
+def _normalized_path(path: str) -> str:
+    """Normaliza separadores conservando el directorio de cada archivo."""
 
-    return PurePosixPath(str(path).replace("\\", "/")).name
+    return str(PurePosixPath(str(path).replace("\\", "/")))
 
 
 def has_agentic_workflow(files: Iterable[str]) -> bool:
@@ -27,7 +27,7 @@ def has_agentic_workflow(files: Iterable[str]) -> bool:
     lock_bases: set[str] = set()
 
     for path in files:
-        name = _file_name(path)
+        name = _normalized_path(path)
         if name.endswith(".md"):
             base = name[: -len(".md")]
             if base:

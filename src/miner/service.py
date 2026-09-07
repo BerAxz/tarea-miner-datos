@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Protocol
 
 from .csv_io import read_candidates, write_candidates
+from .concurrency import bounded_map
 from .detector import has_agentic_workflow
 from .models import (
     MiningSummary,
@@ -32,27 +33,31 @@ class Miner:
     def __init__(self, github_client: WorkflowRepositoryClient) -> None:
         self.github_client = github_client
 
-    def run(self, input_csv: str | Path, output_csv: str | Path) -> MiningSummary:
+    def run(self, input_csv: str | Path, output_csv: str | Path, workers: int = 1) -> MiningSummary:
         candidates = read_candidates(input_csv)
         matched_positions: list[int] = []
         invalid_rows = 0
-        repositories_consulted = 0
-        cache: dict[str, bool] = {}
+        repositories = {}
+        positions = []
 
-        for position, (_, row) in enumerate(candidates.iterrows()):
+        for position, row in enumerate(candidates.to_dict("records")):
             try:
-                repository = repository_from_row(row.to_dict())
+                repository = repository_from_row(row)
             except (RepositoryReferenceError, ValueError) as exc:
                 invalid_rows += 1
                 logger.warning("Se ignora la fila %d: %s", position + 2, exc)
                 continue
 
-            if repository.full_name not in cache:
-                files = self.github_client.list_workflow_files(repository)
-                cache[repository.full_name] = has_agentic_workflow(files)
-                repositories_consulted += 1
+            key = repository.full_name.lower()
+            repositories.setdefault(key, repository)
+            positions.append((position, key))
 
-            if cache[repository.full_name]:
+        def detect(repository):
+            return has_agentic_workflow(self.github_client.list_workflow_files(repository))
+
+        cache = dict(zip(repositories, bounded_map(detect, repositories.values(), workers)))
+        for position, key in positions:
+            if cache[key]:
                 matched_positions.append(position)
 
         filtered = candidates.iloc[matched_positions].copy()
@@ -62,7 +67,7 @@ class Miner:
             input_rows=len(candidates),
             matched_rows=len(filtered),
             invalid_rows=invalid_rows,
-            repositories_consulted=repositories_consulted,
+            repositories_consulted=len(repositories),
         )
 
 

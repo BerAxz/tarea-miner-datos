@@ -221,3 +221,5 @@ __marimo__/
 
 # Generated data output
 data/results.csv.gz
+.miner-cache/
+data/dataset*/

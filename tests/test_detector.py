@@ -13,6 +13,8 @@ from miner.detector import has_agentic_workflow
         ([".github/workflows/daily-report.md", ".github/workflows/daily-report.lock.yml"], True),
         (["report.md", "report.lock.yaml"], False),
         ([], False),
+        (["a/report.md", "b/report.lock.yml"], False),
+        (["a/report.md", "a/report.lock.yml"], True),
     ],
 )
 def test_has_agentic_workflow(files, expected):

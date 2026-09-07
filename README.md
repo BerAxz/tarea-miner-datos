@@ -1,5 +1,27 @@
 # Miner
 
+La versión 0.2 agrega detección GraphQL por lotes con checkpoints reanudables,
+extracción concurrente de Markdown/YAML a cuatro tablas Parquet relacionadas y
+publicación en Hugging Face Datasets. Conserva la invocación original de la CLI.
+
+```bash
+miner data/results.csv.gz -o data/repositorios_ghaw.csv --workers 4
+miner extract data/repositorios_ghaw.csv -o data/dataset --workers 8
+# Instalar soporte opcional y configurar HF_TOKEN antes de publicar:
+python -m pip install -e '.[publish]'
+miner publish data/dataset --repo-id TU_USUARIO/miner-ghaw
+```
+
+Documentación de la nueva versión:
+
+- [Instalación, CLI y ejemplo completo](docs/cli.md).
+- [Diagrama entidad-relación y cardinalidades](docs/schema.md).
+- [Diccionario de datos](docs/data-dictionary.md).
+
+Las credenciales se configuran en `.env`; nunca se incluyen en el dataset.
+La salida de `extract` debe ser un directorio nuevo. Si hay errores de YAML o
+descarga, se conserva un dataset parcial y la CLI retorna código 2.
+
 Miner es una aplicación de línea de comandos que filtra un CSV de repositorios de
 GitHub y genera otro CSV con aquellos que utilizan GitHub Agentic Workflows
 (GH-AW). Un repositorio se considera usuario de GH-AW cuando su directorio

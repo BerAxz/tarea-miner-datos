@@ -136,3 +136,4 @@ class MiningSummary(BaseModel):
     matched_rows: int = Field(ge=0)
     invalid_rows: int = Field(ge=0)
     repositories_consulted: int = Field(ge=0)
+    unavailable_repositories: int = Field(default=0, ge=0)
