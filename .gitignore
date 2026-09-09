@@ -159,6 +159,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# EDA: Parquet originales descargados desde Hugging Face.
+# Las tablas derivadas pequeñas de eda/data/processed/ sí se versionan.
+eda/data/raw/*.parquet
+
 # Spyder project settings
 .spyderproject
 .spyproject
